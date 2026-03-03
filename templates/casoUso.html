@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning en PayPal</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f4f9;
+        color: #333;
+        font-size: 18px;
+        line-height: 1.5;
+    }
+
+    header {
+        background-color: #003087;
+        color: white;
+        padding: 28px 20px;
+        text-align: center;
+    }
+
+    header h1 {
+        font-size: 30px;
+        margin-bottom: 6px;
+    }
+
+    header p {
+        font-size: 17px;
+        opacity: 0.85;
+    }
+
+    /* Wrapper unifica el ancho de todas las secciones */
+    .wrapper {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    section {
+        padding: 30px 20px;
+    }
+
+    section.light {
+        background-color: #e6f2ff;
+    }
+
+    .wrapper h2 {
+        color: #003087;
+        font-size: 22px;
+        margin-bottom: 12px;
+        border-left: 4px solid #003087;
+        padding-left: 10px;
+    }
+
+    .wrapper p {
+        margin-bottom: 10px;
+    }
+
+    /* Cards todas al mismo ancho del wrapper */
+    .card {
+        background-color: white;
+        padding: 18px 22px;
+        margin: 12px 0;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+        width: 100%;
+    }
+
+    .card h3 {
+        font-size: 17px;
+        margin-bottom: 8px;
+        color: #003087;
+    }
+
+    ul {
+        padding-left: 20px;
+    }
+
+    ul li {
+        margin-bottom: 4px;
+    }
+
+    footer {
+        background-color: #003087;
+        color: white;
+        text-align: center;
+        padding: 18px;
+        font-size: 14px;
+    }
+</style>
+
+</head>
+<body>
+
+<header>
+    <h1>Machine Learning en PayPal</h1>
+    <p>Cómo la inteligencia artificial protege millones de transacciones</p>
+</header>
+
+<!-- Sección 1 -->
+<section>
+    <div class="wrapper">
+        <h2>1. ¿Qué es Machine Learning?</h2>
+        <p>El <strong>Machine Learning (ML)</strong> es una rama de la inteligencia artificial que permite a los sistemas aprender automáticamente a partir de datos históricos, sin necesidad de ser programados paso a paso.</p>
+        <p>En lugar de seguir reglas fijas, el sistema analiza grandes volúmenes de información, identifica patrones y mejora su precisión con el tiempo.</p>
+
+        <div class="card">
+            <h3>¿Cómo funciona?</h3>
+            <ul>
+                <li>Recibe datos históricos.</li>
+                <li>Aplica algoritmos matemáticos.</li>
+                <li>Detecta patrones repetitivos.</li>
+                <li>Ajusta sus parámetros automáticamente.</li>
+                <li>Genera un modelo capaz de hacer predicciones.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <p><strong>Algoritmo:</strong> conjunto de reglas matemáticas que analizan los datos.</p>
+            <p><strong>Modelo:</strong> resultado del entrenamiento; es el sistema que ya aprendió y puede tomar decisiones.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Sección 2 -->
+<section class="light">
+    <div class="wrapper">
+        <h2>2. Machine Learning en Seguridad Financiera</h2>
+        <p>En las plataformas digitales de pago se procesan millones de transacciones cada día. Cada operación genera datos importantes que pueden analizarse.</p>
+
+        <div class="card">
+            <ul>
+                <li>Monto de la transacción</li>
+                <li>Ubicación geográfica</li>
+                <li>Dispositivo utilizado</li>
+                <li>Hora del movimiento</li>
+                <li>Historial del usuario</li>
+            </ul>
+        </div>
+
+        <p>Analizar manualmente toda esta información sería imposible. El Machine Learning permite evaluar todos estos factores en milisegundos y detectar comportamientos que se desvían del patrón normal.</p>
+        <p>Esta técnica se conoce como <strong>detección de anomalías</strong>, fundamental para combatir el fraude financiero.</p>
+    </div>
+</section>
+
+<!-- Sección 3 -->
+<section>
+    <div class="wrapper">
+        <h2>3. ¿Cómo lo aplica PayPal?</h2>
+        <p>PayPal procesa millones de transacciones diarias utilizando modelos avanzados de Machine Learning que trabajan en tiempo real.</p>
+
+        <div class="card">
+            <h3>Construcción de perfiles de comportamiento</h3>
+            <ul>
+                <li>País o ciudad habitual</li>
+                <li>Dispositivos frecuentes</li>
+                <li>Promedio de gastos</li>
+                <li>Horarios comunes</li>
+            </ul>
+            <p style="margin-top:8px;">Con esta información se crea un perfil digital personalizado para cada usuario.</p>
+        </div>
+
+        <div class="card">
+            <h3>Detección de anomalías</h3>
+            <p>Si ocurre un cambio inesperado, como un acceso desde otro país o una transferencia inusual, el sistema identifica la desviación automáticamente.</p>
+        </div>
+
+        <div class="card">
+            <h3>Clasificación de riesgo</h3>
+            <p>Cada transacción recibe un puntaje de riesgo. Si el nivel es alto, el sistema puede bloquear la operación, solicitar verificación adicional o activar autenticación en dos pasos.</p>
+            <p style="margin-top:6px;">Todo este proceso ocurre en cuestión de segundos.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Sección 4 -->
+<section class="light">
+    <div class="wrapper">
+        <h2>4. Tipos de fraude detectados</h2>
+
+        <div class="card">
+            <ul>
+                <li><strong>Fraude de registro:</strong> creación de cuentas falsas.</li>
+                <li><strong>Fraude de inicio de sesión:</strong> acceso no autorizado a cuentas reales.</li>
+                <li><strong>Fraude de pago:</strong> uso del dinero sin consentimiento del usuario.</li>
+            </ul>
+            <p style="margin-top:8px;">El sistema aprende constantemente de nuevos intentos de fraude, adaptándose a nuevas estrategias utilizadas por los atacantes.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Sección 5 -->
+<section>
+    <div class="wrapper">
+        <h2>5. Beneficios obtenidos gracias al Machine Learning</h2>
+
+        <div class="card">
+            <ul>
+                <li>Reducción significativa de pérdidas por fraude.</li>
+                <li>Automatización masiva sin intervención humana.</li>
+                <li>Detección en tiempo real.</li>
+                <li>Adaptación continua frente a nuevas amenazas.</li>
+                <li>Mayor confianza y seguridad para los usuarios.</li>
+                <li>Optimización operativa y reducción de costos.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Conclusión -->
+<section class="light">
+    <div class="wrapper">
+        <h2>Conclusión</h2>
+        <p>El Machine Learning se ha convertido en una herramienta esencial en la seguridad financiera digital. Permite prevenir fraudes, proteger el dinero de los usuarios y mantener la estabilidad de las plataformas de pago en un entorno cada vez más complejo.</p>
+    </div>
+</section>
+
+<footer>
+    <p>Elkin Almonacid – Machine Learning</p>
+</footer>
+
+</body>
+</html>
