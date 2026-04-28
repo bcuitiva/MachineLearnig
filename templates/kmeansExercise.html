@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K-Means — Manual Exercise</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#f5f4f0;--surface:#ffffff;--border:#d9d7d0;--text:#111110;--muted:#7a7870;--radius:4px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--tr:0.22s ease;
+      --c1:#2563eb;--c2:#16a34a;--c3:#dc2626;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background-color:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;}
+    .page{flex:1;display:flex;flex-direction:column;max-width:720px;margin:0 auto;width:100%;padding:5rem 1.5rem 3rem;}
+    .back-link{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:3rem;transition:color var(--tr);}
+    .back-link:hover{color:var(--text);}
+    header{margin-bottom:4rem;}
+    .eyebrow{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1.1rem;}
+    h1{font-family:var(--mono);font-size:clamp(1.8rem,5vw,3rem);font-weight:600;letter-spacing:-0.03em;line-height:1.05;color:var(--text);margin-bottom:0.6rem;}
+    .subtitle{font-family:var(--sans);font-size:1rem;font-weight:300;color:var(--muted);}
+    .rule{width:32px;height:1px;background:var(--text);margin:1.6rem 0 0;}
+    .section-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;margin-top:2.5rem;}
+    .content-block{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:1.4rem 1.6rem;margin-bottom:0.5rem;}
+    .block-title{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);margin-bottom:0.7rem;}
+    .content-block p{font-size:0.9rem;font-weight:300;color:var(--text);line-height:1.75;margin-bottom:0.5rem;}
+    .content-block p:last-child{margin-bottom:0;}
+    .content-block ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.35rem;}
+    .content-block ul li{font-size:0.88rem;font-weight:300;color:var(--text);padding-left:1.4rem;position:relative;line-height:1.6;}
+    .content-block ul li::before{content:'—';position:absolute;left:0;color:var(--muted);font-family:var(--mono);font-size:0.75rem;}
+    .content-block ul li strong{font-weight:500;}
+    /* Stats grid */
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.5rem;}
+    .stat-item{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:0.9rem 1rem;}
+    .stat-key{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;}
+    .stat-val{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--text);}
+    .stat-sub{font-size:0.7rem;font-weight:300;color:var(--muted);margin-top:0.15rem;}
+    /* Centroids row */
+    .centroids-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.5rem;}
+    .centroid-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:1rem 1.1rem;}
+    .centroid-label{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.4rem;}
+    .centroid-label.c1{color:var(--c1);}
+    .centroid-label.c2{color:var(--c2);}
+    .centroid-label.c3{color:var(--c3);}
+    .centroid-val{font-family:var(--mono);font-size:0.85rem;font-weight:600;color:var(--text);}
+    .centroid-count{font-size:0.7rem;font-weight:300;color:var(--muted);margin-top:0.2rem;}
+    /* Distance table */
+
+    .dist-table-wrap{overflow-x:auto;overflow-y:auto;max-height:340px;margin-bottom:0.5rem;}
+    .dist-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+    .dist-table thead tr{border-bottom:1px solid var(--border);}
+    .dist-table th{font-family:var(--mono);font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:0.45rem 0.6rem;text-align:right;font-weight:400;}
+    .dist-table th:first-child{text-align:left;}
+    .dist-table td{font-family:var(--mono);font-size:0.75rem;padding:0.45rem 0.6rem;border-bottom:1px solid var(--border);text-align:right;color:var(--muted);}
+    .dist-table td:first-child{color:var(--text);font-weight:600;text-align:left;}
+    .dist-table td.win{color:var(--text);font-weight:600;}
+    .dist-table .cluster-c1{color:var(--c1);font-weight:600;}
+    .dist-table .cluster-c2{color:var(--c2);font-weight:600;}
+    .dist-table .cluster-c3{color:var(--c3);font-weight:600;}
+    .dist-table tr:last-child td{border-bottom:none;}
+    /* Charts */
+    .chart-wrap{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:1.4rem 1.6rem;margin-bottom:0.5rem;}
+    .chart-meta{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+    .chart-container{position:relative;height:280px;}
+    /* Variance summary */
+    .variance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.5rem;}
+    .var-item{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:0.9rem 1rem;}
+    .var-key{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;}
+    .var-val{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--text);}
+    .var-delta{font-size:0.7rem;font-weight:300;color:var(--muted);margin-top:0.15rem;}
+    /* Iteration header */
+    .iter-header{border:1px solid var(--text);border-radius:var(--radius);background:var(--text);padding:1rem 1.4rem;margin-bottom:0.5rem;display:flex;align-items:baseline;gap:1rem;}
+    .iter-num{font-family:var(--mono);font-size:1.5rem;font-weight:600;color:var(--bg);}
+    .iter-title{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(245,244,240,0.6);}
+    footer{margin-top:4rem;border-top:1px solid var(--border);padding-top:2rem;}
+    .footer-label{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+    .members{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1.4rem;}
+    .member{font-size:0.88rem;font-weight:400;color:var(--text);}
+    .university{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.08em;color:var(--muted);}
+    /* Dataset table */
+    .dataset-wrap{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin-bottom:0.5rem;overflow:hidden;}
+    .dataset-table{width:100%;border-collapse:collapse;}
+    .dataset-table thead tr{border-bottom:2px solid var(--border);background:var(--bg);}
+    .dataset-table th{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.6rem 0.9rem;text-align:left;font-weight:400;}
+    .dataset-table th:not(:first-child){text-align:right;}
+    .dataset-table td{font-family:var(--mono);font-size:0.78rem;padding:0.45rem 0.9rem;border-bottom:1px solid var(--border);color:var(--text);}
+    .dataset-table td:not(:first-child){text-align:right;}
+    .dataset-table tr:last-child td{border-bottom:none;}
+    .dataset-table tr:nth-child(even) td{background:rgba(245,244,240,0.5);}
+    .dataset-table td.id-col{color:var(--muted);font-size:0.7rem;}
+    .table-scroll{max-height:340px;overflow-y:auto;}
+    .table-scroll::-webkit-scrollbar{width:4px;}
+    .table-scroll::-webkit-scrollbar-track{background:var(--bg);}
+    .table-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    @media(max-width:520px){.page{padding:3rem 1.2rem 2rem;}.stats-grid,.centroids-row,.variance-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="page">
+  <a href="{{ url_for('unsupervisedML') }}" class="back-link">&#8592; Unsupervised Machine Learning</a>
+  <header>
+    <p class="eyebrow">Module 03 &middot; Manual Exercise</p>
+    <h1>K-Means Simulation</h1>
+    <p class="subtitle">Step-by-step manual execution of the K-Means algorithm over 3 iterations with 100 data points and K=3</p>
+    <div class="rule"></div>
+  </header>
+
+  <main>
+
+    <!-- Dataset -->
+    <p class="section-label">Dataset</p>
+    <div class="content-block">
+      <p class="block-title">Age &amp; Income Dataset</p>
+      <p>The dataset consists of <strong>100 records</strong>, each representing an individual described by two numerical features: <strong>Age</strong> (years) and <strong>Income</strong> (USD/month). The data was generated using AI tools to provide a controlled environment suitable for manual K-Means simulation.</p>
+      <p>No labels or predefined categories are included, making this dataset appropriate for unsupervised learning. The two-dimensional structure allows full visual inspection of cluster formation across iterations.</p>
+    </div>
+    <!-- Full dataset table -->
+    <div class="dataset-wrap">
+      <div class="table-scroll">
+        <table class="dataset-table">
+          <thead>
+            <tr><th>ID</th><th>Age (years)</th><th>Income (USD)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="id-col">001</td><td>22</td><td>1,200</td></tr>
+            <tr><td class="id-col">002</td><td>25</td><td>1,500</td></tr>
+            <tr><td class="id-col">003</td><td>47</td><td>3,200</td></tr>
+            <tr><td class="id-col">004</td><td>52</td><td>4,100</td></tr>
+            <tr><td class="id-col">005</td><td>46</td><td>3,000</td></tr>
+            <tr><td class="id-col">006</td><td>56</td><td>4,800</td></tr>
+            <tr><td class="id-col">007</td><td>23</td><td>1,300</td></tr>
+            <tr><td class="id-col">008</td><td>34</td><td>2,200</td></tr>
+            <tr><td class="id-col">009</td><td>29</td><td>2,000</td></tr>
+            <tr><td class="id-col">010</td><td>41</td><td>3,100</td></tr>
+            <tr><td class="id-col">011</td><td>38</td><td>2,800</td></tr>
+            <tr><td class="id-col">012</td><td>50</td><td>3,900</td></tr>
+            <tr><td class="id-col">013</td><td>27</td><td>1,800</td></tr>
+            <tr><td class="id-col">014</td><td>31</td><td>2,100</td></tr>
+            <tr><td class="id-col">015</td><td>44</td><td>3,300</td></tr>
+            <tr><td class="id-col">016</td><td>55</td><td>4,600</td></tr>
+            <tr><td class="id-col">017</td><td>24</td><td>1,400</td></tr>
+            <tr><td class="id-col">018</td><td>36</td><td>2,600</td></tr>
+            <tr><td class="id-col">019</td><td>28</td><td>1,900</td></tr>
+            <tr><td class="id-col">020</td><td>49</td><td>3,700</td></tr>
+            <tr><td class="id-col">021</td><td>53</td><td>4,200</td></tr>
+            <tr><td class="id-col">022</td><td>26</td><td>1,700</td></tr>
+            <tr><td class="id-col">023</td><td>33</td><td>2,300</td></tr>
+            <tr><td class="id-col">024</td><td>39</td><td>2,900</td></tr>
+            <tr><td class="id-col">025</td><td>48</td><td>3,600</td></tr>
+            <tr><td class="id-col">026</td><td>57</td><td>4,900</td></tr>
+            <tr><td class="id-col">027</td><td>21</td><td>1,100</td></tr>
+            <tr><td class="id-col">028</td><td>35</td><td>2,500</td></tr>
+            <tr><td class="id-col">029</td><td>30</td><td>2,050</td></tr>
+            <tr><td class="id-col">030</td><td>42</td><td>3,150</td></tr>
+            <tr><td class="id-col">031</td><td>37</td><td>2,750</td></tr>
+            <tr><td class="id-col">032</td><td>51</td><td>4,000</td></tr>
+            <tr><td class="id-col">033</td><td>28</td><td>1,850</td></tr>
+            <tr><td class="id-col">034</td><td>32</td><td>2,150</td></tr>
+            <tr><td class="id-col">035</td><td>45</td><td>3,350</td></tr>
+            <tr><td class="id-col">036</td><td>54</td><td>4,500</td></tr>
+            <tr><td class="id-col">037</td><td>23</td><td>1,350</td></tr>
+            <tr><td class="id-col">038</td><td>36</td><td>2,550</td></tr>
+            <tr><td class="id-col">039</td><td>29</td><td>1,950</td></tr>
+            <tr><td class="id-col">040</td><td>47</td><td>3,400</td></tr>
+            <tr><td class="id-col">041</td><td>52</td><td>4,300</td></tr>
+            <tr><td class="id-col">042</td><td>27</td><td>1,750</td></tr>
+            <tr><td class="id-col">043</td><td>34</td><td>2,250</td></tr>
+            <tr><td class="id-col">044</td><td>40</td><td>2,950</td></tr>
+            <tr><td class="id-col">045</td><td>49</td><td>3,650</td></tr>
+            <tr><td class="id-col">046</td><td>56</td><td>4,700</td></tr>
+            <tr><td class="id-col">047</td><td>22</td><td>1,250</td></tr>
+            <tr><td class="id-col">048</td><td>33</td><td>2,400</td></tr>
+            <tr><td class="id-col">049</td><td>31</td><td>2,100</td></tr>
+            <tr><td class="id-col">050</td><td>43</td><td>3,200</td></tr>
+            <tr><td class="id-col">051</td><td>38</td><td>2,850</td></tr>
+            <tr><td class="id-col">052</td><td>50</td><td>3,950</td></tr>
+            <tr><td class="id-col">053</td><td>26</td><td>1,650</td></tr>
+            <tr><td class="id-col">054</td><td>35</td><td>2,450</td></tr>
+            <tr><td class="id-col">055</td><td>44</td><td>3,300</td></tr>
+            <tr><td class="id-col">056</td><td>55</td><td>4,550</td></tr>
+            <tr><td class="id-col">057</td><td>24</td><td>1,450</td></tr>
+            <tr><td class="id-col">058</td><td>37</td><td>2,700</td></tr>
+            <tr><td class="id-col">059</td><td>28</td><td>1,900</td></tr>
+            <tr><td class="id-col">060</td><td>48</td><td>3,500</td></tr>
+            <tr><td class="id-col">061</td><td>53</td><td>4,250</td></tr>
+            <tr><td class="id-col">062</td><td>25</td><td>1,550</td></tr>
+            <tr><td class="id-col">063</td><td>32</td><td>2,200</td></tr>
+            <tr><td class="id-col">064</td><td>39</td><td>3,000</td></tr>
+            <tr><td class="id-col">065</td><td>46</td><td>3,450</td></tr>
+            <tr><td class="id-col">066</td><td>57</td><td>4,850</td></tr>
+            <tr><td class="id-col">067</td><td>21</td><td>1,150</td></tr>
+            <tr><td class="id-col">068</td><td>34</td><td>2,350</td></tr>
+            <tr><td class="id-col">069</td><td>30</td><td>2,050</td></tr>
+            <tr><td class="id-col">070</td><td>41</td><td>3,100</td></tr>
+            <tr><td class="id-col">071</td><td>36</td><td>2,600</td></tr>
+            <tr><td class="id-col">072</td><td>52</td><td>4,100</td></tr>
+            <tr><td class="id-col">073</td><td>27</td><td>1,750</td></tr>
+            <tr><td class="id-col">074</td><td>33</td><td>2,300</td></tr>
+            <tr><td class="id-col">075</td><td>45</td><td>3,350</td></tr>
+            <tr><td class="id-col">076</td><td>54</td><td>4,450</td></tr>
+            <tr><td class="id-col">077</td><td>23</td><td>1,300</td></tr>
+            <tr><td class="id-col">078</td><td>35</td><td>2,500</td></tr>
+            <tr><td class="id-col">079</td><td>29</td><td>2,000</td></tr>
+            <tr><td class="id-col">080</td><td>47</td><td>3,400</td></tr>
+            <tr><td class="id-col">081</td><td>51</td><td>4,050</td></tr>
+            <tr><td class="id-col">082</td><td>26</td><td>1,700</td></tr>
+            <tr><td class="id-col">083</td><td>31</td><td>2,150</td></tr>
+            <tr><td class="id-col">084</td><td>38</td><td>2,900</td></tr>
+            <tr><td class="id-col">085</td><td>49</td><td>3,600</td></tr>
+            <tr><td class="id-col">086</td><td>56</td><td>4,750</td></tr>
+            <tr><td class="id-col">087</td><td>22</td><td>1,200</td></tr>
+            <tr><td class="id-col">088</td><td>34</td><td>2,400</td></tr>
+            <tr><td class="id-col">089</td><td>30</td><td>2,100</td></tr>
+            <tr><td class="id-col">090</td><td>42</td><td>3,200</td></tr>
+            <tr><td class="id-col">091</td><td>37</td><td>2,800</td></tr>
+            <tr><td class="id-col">092</td><td>50</td><td>3,900</td></tr>
+            <tr><td class="id-col">093</td><td>28</td><td>1,850</td></tr>
+            <tr><td class="id-col">094</td><td>33</td><td>2,250</td></tr>
+            <tr><td class="id-col">095</td><td>44</td><td>3,300</td></tr>
+            <tr><td class="id-col">096</td><td>55</td><td>4,600</td></tr>
+            <tr><td class="id-col">097</td><td>24</td><td>1,400</td></tr>
+            <tr><td class="id-col">098</td><td>36</td><td>2,600</td></tr>
+            <tr><td class="id-col">099</td><td>29</td><td>1,950</td></tr>
+            <tr><td class="id-col">100</td><td>48</td><td>3,550</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-item"><p class="stat-key">Records</p><p class="stat-val">100</p><p class="stat-sub">Data points</p></div>
+      <div class="stat-item"><p class="stat-key">Features</p><p class="stat-val">2</p><p class="stat-sub">Age · Income</p></div>
+      <div class="stat-item"><p class="stat-key">Clusters (K)</p><p class="stat-val">3</p><p class="stat-sub">Defined manually</p></div>
+      <div class="stat-item"><p class="stat-key">Age range</p><p class="stat-val">21 – 57</p><p class="stat-sub">Years</p></div>
+      <div class="stat-item"><p class="stat-key">Income range</p><p class="stat-val">1,100 – 4,900</p><p class="stat-sub">USD / month</p></div>
+      <div class="stat-item"><p class="stat-key">Iterations</p><p class="stat-val">3</p><p class="stat-sub">Until convergence</p></div>
+    </div>
+
+    <!-- Initial centroids -->
+    <p class="section-label">Initial Centroids</p>
+    <div class="content-block">
+      <p>Three initial centroids were selected manually to provide a reasonable distribution across the dataset range, allowing the algorithm to begin the iterative assignment process:</p>
+    </div>
+    <div class="centroids-row">
+      <div class="centroid-card"><p class="centroid-label c1">C1 — Cluster 1</p><p class="centroid-val">(22, 1200)</p><p class="centroid-count">Age=22 · Income=1200</p></div>
+      <div class="centroid-card"><p class="centroid-label c2">C2 — Cluster 2</p><p class="centroid-val">(35, 2500)</p><p class="centroid-count">Age=35 · Income=2500</p></div>
+      <div class="centroid-card"><p class="centroid-label c3">C3 — Cluster 3</p><p class="centroid-val">(55, 4600)</p><p class="centroid-count">Age=55 · Income=4600</p></div>
+    </div>
+
+    <!-- Distance formula -->
+    <p class="section-label">Distance Calculation Method</p>
+    <div class="content-block">
+      <p class="block-title">Euclidean Distance</p>
+      <p>All assignments are based on the Euclidean distance between each data point and each centroid. For a point (Age, Income) and centroid (Cₓ, Cᵧ):</p>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:0.88rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:0.75rem 1rem;margin:0.6rem 0;">d = √( (Age − Cₓ)² + (Income − Cᵧ)² )</p>
+      <p>Each point is assigned to the cluster with the smallest distance. The same formula is applied to all 100 records in each iteration.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ITERATION 1
+    ═══════════════════════════════════════════ -->
+    <p class="section-label">Iteration 1</p>
+    <div class="iter-header"><span class="iter-num">01</span><span class="iter-title">Initial assignment · Centroids C1=(22,1200) C2=(35,2500) C3=(55,4600)</span></div>
+
+    <!-- Full 100-row distance table iteration 1 -->
+    <div class="content-block">
+      <p class="block-title">Distance Calculations — All 100 Points</p>
+      <div class="dist-table-wrap">
+        <table class="dist-table">
+          <thead><tr><th>ID</th><th>Age</th><th>Income</th><th>d → C1</th><th>d → C2</th><th>d → C3</th><th>Cluster</th></tr></thead>
+          <tbody>
+            <tr><td>001</td><td>22</td><td>1,200</td><td class="win">0.0</td><td>1300.06</td><td>3400.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>002</td><td>25</td><td>1,500</td><td class="win">300.01</td><td>1000.05</td><td>3100.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>003</td><td>47</td><td>3,200</td><td>2000.16</td><td class="win">700.1</td><td>1400.02</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>004</td><td>52</td><td>4,100</td><td>2900.16</td><td>1600.09</td><td class="win">500.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>005</td><td>46</td><td>3,000</td><td>1800.16</td><td class="win">500.12</td><td>1600.03</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>006</td><td>56</td><td>4,800</td><td>3600.16</td><td>2300.1</td><td class="win">200.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>007</td><td>23</td><td>1,300</td><td class="win">100.0</td><td>1200.06</td><td>3300.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>008</td><td>34</td><td>2,200</td><td>1000.07</td><td class="win">300.0</td><td>2400.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>009</td><td>29</td><td>2,000</td><td>800.03</td><td class="win">500.04</td><td>2600.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>010</td><td>41</td><td>3,100</td><td>1900.09</td><td class="win">600.03</td><td>1500.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>011</td><td>38</td><td>2,800</td><td>1600.08</td><td class="win">300.01</td><td>1800.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>012</td><td>50</td><td>3,900</td><td>2700.15</td><td>1400.08</td><td class="win">700.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>013</td><td>27</td><td>1,800</td><td class="win">600.02</td><td>700.05</td><td>2800.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>014</td><td>31</td><td>2,100</td><td>900.04</td><td class="win">400.02</td><td>2500.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>015</td><td>44</td><td>3,300</td><td>2100.12</td><td class="win">800.05</td><td>1300.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>016</td><td>55</td><td>4,600</td><td>3400.16</td><td>2100.1</td><td class="win">0.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>017</td><td>24</td><td>1,400</td><td class="win">200.01</td><td>1100.05</td><td>3200.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>018</td><td>36</td><td>2,600</td><td>1400.07</td><td class="win">100.0</td><td>2000.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>019</td><td>28</td><td>1,900</td><td>700.03</td><td class="win">600.04</td><td>2700.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>020</td><td>49</td><td>3,700</td><td>2500.15</td><td>1200.08</td><td class="win">900.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>021</td><td>53</td><td>4,200</td><td>3000.16</td><td>1700.1</td><td class="win">400.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>022</td><td>26</td><td>1,700</td><td class="win">500.02</td><td>800.05</td><td>2900.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>023</td><td>33</td><td>2,300</td><td>1100.05</td><td class="win">200.01</td><td>2300.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>024</td><td>39</td><td>2,900</td><td>1700.08</td><td class="win">400.02</td><td>1700.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>025</td><td>48</td><td>3,600</td><td>2400.14</td><td>1100.08</td><td class="win">1000.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>026</td><td>57</td><td>4,900</td><td>3700.17</td><td>2400.1</td><td class="win">300.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>027</td><td>21</td><td>1,100</td><td class="win">100.0</td><td>1400.07</td><td>3500.17</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>028</td><td>35</td><td>2,500</td><td>1300.06</td><td class="win">0.0</td><td>2100.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>029</td><td>30</td><td>2,050</td><td>850.04</td><td class="win">450.03</td><td>2550.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>030</td><td>42</td><td>3,150</td><td>1950.1</td><td class="win">650.04</td><td>1450.06</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>031</td><td>37</td><td>2,750</td><td>1550.07</td><td class="win">250.01</td><td>1850.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>032</td><td>51</td><td>4,000</td><td>2800.15</td><td>1500.09</td><td class="win">600.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>033</td><td>28</td><td>1,850</td><td class="win">650.03</td><td>650.04</td><td>2750.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>034</td><td>32</td><td>2,150</td><td>950.05</td><td class="win">350.01</td><td>2450.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>035</td><td>45</td><td>3,350</td><td>2150.12</td><td class="win">850.06</td><td>1250.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>036</td><td>54</td><td>4,500</td><td>3300.16</td><td>2000.09</td><td class="win">100.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>037</td><td>23</td><td>1,350</td><td class="win">150.0</td><td>1150.06</td><td>3250.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>038</td><td>36</td><td>2,550</td><td>1350.07</td><td class="win">50.01</td><td>2050.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>039</td><td>29</td><td>1,950</td><td>750.03</td><td class="win">550.03</td><td>2650.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>040</td><td>47</td><td>3,400</td><td>2200.14</td><td class="win">900.08</td><td>1200.03</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>041</td><td>52</td><td>4,300</td><td>3100.15</td><td>1800.08</td><td class="win">300.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>042</td><td>27</td><td>1,750</td><td class="win">550.02</td><td>750.04</td><td>2850.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>043</td><td>34</td><td>2,250</td><td>1050.07</td><td class="win">250.0</td><td>2350.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>044</td><td>40</td><td>2,950</td><td>1750.09</td><td class="win">450.03</td><td>1650.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>045</td><td>49</td><td>3,650</td><td>2450.15</td><td>1150.09</td><td class="win">950.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>046</td><td>56</td><td>4,700</td><td>3500.17</td><td>2200.1</td><td class="win">100.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>047</td><td>22</td><td>1,250</td><td class="win">50.0</td><td>1250.07</td><td>3350.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>048</td><td>33</td><td>2,400</td><td>1200.05</td><td class="win">100.02</td><td>2200.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>049</td><td>31</td><td>2,100</td><td>900.04</td><td class="win">400.02</td><td>2500.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>050</td><td>43</td><td>3,200</td><td>2000.11</td><td class="win">700.05</td><td>1400.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>051</td><td>38</td><td>2,850</td><td>1650.08</td><td class="win">350.01</td><td>1750.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>052</td><td>50</td><td>3,950</td><td>2750.14</td><td>1450.08</td><td class="win">650.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>053</td><td>26</td><td>1,650</td><td class="win">450.02</td><td>850.05</td><td>2950.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>054</td><td>35</td><td>2,450</td><td>1250.07</td><td class="win">50.0</td><td>2150.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>055</td><td>44</td><td>3,300</td><td>2100.12</td><td class="win">800.05</td><td>1300.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>056</td><td>55</td><td>4,550</td><td>3350.16</td><td>2050.1</td><td class="win">50.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>057</td><td>24</td><td>1,450</td><td class="win">250.01</td><td>1050.06</td><td>3150.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>058</td><td>37</td><td>2,700</td><td>1500.07</td><td class="win">200.01</td><td>1900.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>059</td><td>28</td><td>1,900</td><td>700.03</td><td class="win">600.04</td><td>2700.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>060</td><td>48</td><td>3,500</td><td>2300.15</td><td class="win">1000.08</td><td>1100.02</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>061</td><td>53</td><td>4,250</td><td>3050.16</td><td>1750.09</td><td class="win">350.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>062</td><td>25</td><td>1,550</td><td class="win">350.01</td><td>950.05</td><td>3050.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>063</td><td>32</td><td>2,200</td><td>1000.05</td><td class="win">300.01</td><td>2400.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>064</td><td>39</td><td>3,000</td><td>1800.08</td><td class="win">500.02</td><td>1600.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>065</td><td>46</td><td>3,450</td><td>2250.13</td><td class="win">950.06</td><td>1150.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>066</td><td>57</td><td>4,850</td><td>3650.17</td><td>2350.1</td><td class="win">250.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>067</td><td>21</td><td>1,150</td><td class="win">50.01</td><td>1350.07</td><td>3450.17</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>068</td><td>34</td><td>2,350</td><td>1150.06</td><td class="win">150.0</td><td>2250.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>069</td><td>30</td><td>2,050</td><td>850.04</td><td class="win">450.03</td><td>2550.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>070</td><td>41</td><td>3,100</td><td>1900.09</td><td class="win">600.03</td><td>1500.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>071</td><td>36</td><td>2,600</td><td>1400.07</td><td class="win">100.0</td><td>2000.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>072</td><td>52</td><td>4,100</td><td>2900.16</td><td>1600.09</td><td class="win">500.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>073</td><td>27</td><td>1,750</td><td class="win">550.02</td><td>750.04</td><td>2850.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>074</td><td>33</td><td>2,300</td><td>1100.05</td><td class="win">200.01</td><td>2300.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>075</td><td>45</td><td>3,350</td><td>2150.12</td><td class="win">850.06</td><td>1250.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>076</td><td>54</td><td>4,450</td><td>3250.16</td><td>1950.09</td><td class="win">150.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>077</td><td>23</td><td>1,300</td><td class="win">100.0</td><td>1200.06</td><td>3300.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>078</td><td>35</td><td>2,500</td><td>1300.06</td><td class="win">0.0</td><td>2100.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>079</td><td>29</td><td>2,000</td><td>800.03</td><td class="win">500.04</td><td>2600.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>080</td><td>47</td><td>3,400</td><td>2200.14</td><td class="win">900.08</td><td>1200.03</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>081</td><td>51</td><td>4,050</td><td>2850.15</td><td>1550.08</td><td class="win">550.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>082</td><td>26</td><td>1,700</td><td class="win">500.02</td><td>800.05</td><td>2900.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>083</td><td>31</td><td>2,150</td><td>950.04</td><td class="win">350.02</td><td>2450.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>084</td><td>38</td><td>2,900</td><td>1700.08</td><td class="win">400.01</td><td>1700.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>085</td><td>49</td><td>3,600</td><td>2400.15</td><td>1100.09</td><td class="win">1000.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>086</td><td>56</td><td>4,750</td><td>3550.16</td><td>2250.1</td><td class="win">150.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>087</td><td>22</td><td>1,200</td><td class="win">0.0</td><td>1300.06</td><td>3400.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>088</td><td>34</td><td>2,400</td><td>1200.06</td><td class="win">100.0</td><td>2200.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>089</td><td>30</td><td>2,100</td><td>900.04</td><td class="win">400.03</td><td>2500.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>090</td><td>42</td><td>3,200</td><td>2000.1</td><td class="win">700.03</td><td>1400.06</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>091</td><td>37</td><td>2,800</td><td>1600.07</td><td class="win">300.01</td><td>1800.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>092</td><td>50</td><td>3,900</td><td>2700.15</td><td>1400.08</td><td class="win">700.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>093</td><td>28</td><td>1,850</td><td class="win">650.03</td><td>650.04</td><td>2750.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>094</td><td>33</td><td>2,250</td><td>1050.06</td><td class="win">250.01</td><td>2350.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>095</td><td>44</td><td>3,300</td><td>2100.12</td><td class="win">800.05</td><td>1300.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>096</td><td>55</td><td>4,600</td><td>3400.16</td><td>2100.1</td><td class="win">0.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>097</td><td>24</td><td>1,400</td><td class="win">200.01</td><td>1100.05</td><td>3200.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>098</td><td>36</td><td>2,600</td><td>1400.07</td><td class="win">100.0</td><td>2000.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>099</td><td>29</td><td>1,950</td><td>750.03</td><td class="win">550.03</td><td>2650.13</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>100</td><td>48</td><td>3,550</td><td>2350.14</td><td>1050.08</td><td class="win">1050.02</td><td class="cluster-c3">C3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Iteration 1 cluster scatter -->
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 1 — Cluster assignments &nbsp;·&nbsp; 100 points &nbsp;·&nbsp; Hover for coordinates</p>
+      <div class="chart-container"><canvas id="scatter1"></canvas></div>
+    </div>
+
+    <!-- Iteration 1 results -->
+    <div class="centroids-row">
+      <div class="centroid-card"><p class="centroid-label c1">C1 → New</p><p class="centroid-val">(24.5, 1485.7)</p><p class="centroid-count">21 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c2">C2 → New</p><p class="centroid-val">(36.9, 2644.4)</p><p class="centroid-count">54 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c3">C3 → New</p><p class="centroid-val">(52.5, 4222.0)</p><p class="centroid-count">25 points assigned</p></div>
+    </div>
+
+    <!-- Iteration 1 variance -->
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 1 — SSE (Variance) per cluster</p>
+      <div class="chart-container"><canvas id="var1"></canvas></div>
+    </div>
+    <div class="variance-grid">
+      <div class="var-item"><p class="var-key">SSE — C1</p><p class="var-val">2,925,230</p></div>
+      <div class="var-item"><p class="var-key">SSE — C2</p><p class="var-val">14,347,023</p></div>
+      <div class="var-item"><p class="var-key">SSE — C3</p><p class="var-val">8,012,861</p></div>
+      <div class="var-item" style="grid-column:1/-1;border-color:var(--text);background:var(--surface);">
+        <p class="var-key">Total SSE</p><p class="var-val">25,285,114</p>
+        <p class="var-delta">Baseline — first assignment</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ITERATION 2
+    ═══════════════════════════════════════════ -->
+    <p class="section-label">Iteration 2</p>
+    <div class="iter-header"><span class="iter-num">02</span><span class="iter-title">Updated centroids · C1=(24.5,1485.7) C2=(36.9,2644.4) C3=(52.5,4222.0)</span></div>
+
+    <div class="content-block">
+      <p class="block-title">Distance Calculations — All 100 Points</p>
+      <div class="dist-table-wrap">
+        <table class="dist-table">
+          <thead><tr><th>ID</th><th>Age</th><th>Income</th><th>d → C1</th><th>d → C2</th><th>d → C3</th><th>Cluster</th></tr></thead>
+          <tbody>
+            <tr><td>001</td><td>22</td><td>1,200</td><td class="win">285.71</td><td>1444.48</td><td>3022.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>002</td><td>25</td><td>1,500</td><td class="win">14.31</td><td>1144.46</td><td>2722.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>003</td><td>47</td><td>3,200</td><td>1714.45</td><td class="win">555.69</td><td>1022.01</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>004</td><td>52</td><td>4,100</td><td>2614.44</td><td>1455.68</td><td class="win">122.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>005</td><td>46</td><td>3,000</td><td>1514.45</td><td class="win">355.72</td><td>1222.02</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>006</td><td>56</td><td>4,800</td><td>3314.45</td><td>2155.68</td><td class="win">578.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>007</td><td>23</td><td>1,300</td><td class="win">185.71</td><td>1344.47</td><td>2922.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>008</td><td>34</td><td>2,200</td><td>714.36</td><td class="win">444.41</td><td>2022.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>009</td><td>29</td><td>2,000</td><td class="win">514.32</td><td>644.45</td><td>2222.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>010</td><td>41</td><td>3,100</td><td>1614.38</td><td class="win">455.62</td><td>1122.06</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>011</td><td>38</td><td>2,800</td><td>1314.37</td><td class="win">155.6</td><td>1422.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>012</td><td>50</td><td>3,900</td><td>2414.43</td><td>1255.67</td><td class="win">322.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>013</td><td>27</td><td>1,800</td><td class="win">314.31</td><td>844.46</td><td>2422.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>014</td><td>31</td><td>2,100</td><td>614.33</td><td class="win">544.43</td><td>2122.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>015</td><td>44</td><td>3,300</td><td>1814.4</td><td class="win">655.64</td><td>922.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>016</td><td>55</td><td>4,600</td><td>3114.45</td><td>1955.68</td><td class="win">378.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>017</td><td>24</td><td>1,400</td><td class="win">85.7</td><td>1244.47</td><td>2822.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>018</td><td>36</td><td>2,600</td><td>1114.36</td><td class="win">44.41</td><td>1622.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>019</td><td>28</td><td>1,900</td><td class="win">414.31</td><td>744.45</td><td>2322.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>020</td><td>49</td><td>3,700</td><td>2214.44</td><td>1055.67</td><td class="win">522.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>021</td><td>53</td><td>4,200</td><td>2714.45</td><td>1555.68</td><td class="win">22.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>022</td><td>26</td><td>1,700</td><td class="win">214.31</td><td>944.46</td><td>2522.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>023</td><td>33</td><td>2,300</td><td>814.34</td><td class="win">344.42</td><td>1922.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>024</td><td>39</td><td>2,900</td><td>1414.37</td><td class="win">255.61</td><td>1322.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>025</td><td>48</td><td>3,600</td><td>2114.43</td><td>955.66</td><td class="win">622.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>026</td><td>57</td><td>4,900</td><td>3414.45</td><td>2255.69</td><td class="win">678.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>027</td><td>21</td><td>1,100</td><td class="win">385.72</td><td>1544.48</td><td>3122.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>028</td><td>35</td><td>2,500</td><td>1014.35</td><td class="win">144.41</td><td>1722.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>029</td><td>30</td><td>2,050</td><td class="win">564.33</td><td>594.44</td><td>2172.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>030</td><td>42</td><td>3,150</td><td>1664.39</td><td class="win">505.63</td><td>1072.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>031</td><td>37</td><td>2,750</td><td>1264.36</td><td class="win">105.6</td><td>1472.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>032</td><td>51</td><td>4,000</td><td>2514.44</td><td>1355.67</td><td class="win">222.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>033</td><td>28</td><td>1,850</td><td class="win">364.32</td><td>794.45</td><td>2372.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>034</td><td>32</td><td>2,150</td><td>664.34</td><td class="win">494.42</td><td>2072.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>035</td><td>45</td><td>3,350</td><td>1864.41</td><td class="win">705.65</td><td>872.03</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>036</td><td>54</td><td>4,500</td><td>3014.44</td><td>1855.68</td><td class="win">278.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>037</td><td>23</td><td>1,350</td><td class="win">135.71</td><td>1294.47</td><td>2872.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>038</td><td>36</td><td>2,550</td><td>1064.36</td><td class="win">94.4</td><td>1672.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>039</td><td>29</td><td>1,950</td><td class="win">464.32</td><td>694.44</td><td>2272.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>040</td><td>47</td><td>3,400</td><td>1914.43</td><td class="win">755.67</td><td>822.02</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>041</td><td>52</td><td>4,300</td><td>2814.43</td><td>1655.67</td><td class="win">78.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>042</td><td>27</td><td>1,750</td><td class="win">264.31</td><td>894.45</td><td>2472.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>043</td><td>34</td><td>2,250</td><td>764.36</td><td class="win">394.41</td><td>1972.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>044</td><td>40</td><td>2,950</td><td>1464.38</td><td class="win">305.62</td><td>1272.06</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>045</td><td>49</td><td>3,650</td><td>2164.44</td><td>1005.67</td><td class="win">572.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>046</td><td>56</td><td>4,700</td><td>3214.45</td><td>2055.69</td><td class="win">478.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>047</td><td>22</td><td>1,250</td><td class="win">235.71</td><td>1394.48</td><td>2972.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>048</td><td>33</td><td>2,400</td><td>914.34</td><td class="win">244.43</td><td>1822.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>049</td><td>31</td><td>2,100</td><td>614.33</td><td class="win">544.43</td><td>2122.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>050</td><td>43</td><td>3,200</td><td>1714.4</td><td class="win">555.63</td><td>1022.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>051</td><td>38</td><td>2,850</td><td>1364.37</td><td class="win">205.6</td><td>1372.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>052</td><td>50</td><td>3,950</td><td>2464.43</td><td>1305.67</td><td class="win">272.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>053</td><td>26</td><td>1,650</td><td class="win">164.31</td><td>994.46</td><td>2572.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>054</td><td>35</td><td>2,450</td><td>964.36</td><td class="win">194.41</td><td>1772.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>055</td><td>44</td><td>3,300</td><td>1814.4</td><td class="win">655.64</td><td>922.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>056</td><td>55</td><td>4,550</td><td>3064.45</td><td>1905.69</td><td class="win">328.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>057</td><td>24</td><td>1,450</td><td class="win">35.7</td><td>1194.47</td><td>2772.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>058</td><td>37</td><td>2,700</td><td>1214.36</td><td class="win">55.6</td><td>1522.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>059</td><td>28</td><td>1,900</td><td class="win">414.31</td><td>744.45</td><td>2322.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>060</td><td>48</td><td>3,500</td><td>2014.44</td><td>855.67</td><td class="win">722.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>061</td><td>53</td><td>4,250</td><td>2764.45</td><td>1605.68</td><td class="win">28.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>062</td><td>25</td><td>1,550</td><td class="win">64.3</td><td>1094.46</td><td>2672.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>063</td><td>32</td><td>2,200</td><td>714.34</td><td class="win">444.43</td><td>2022.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>064</td><td>39</td><td>3,000</td><td>1514.37</td><td class="win">355.61</td><td>1222.07</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>065</td><td>46</td><td>3,450</td><td>1964.42</td><td>805.65</td><td class="win">772.03</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>066</td><td>57</td><td>4,850</td><td>3364.46</td><td>2205.69</td><td class="win">628.02</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>067</td><td>21</td><td>1,150</td><td class="win">335.72</td><td>1494.48</td><td>3072.16</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>068</td><td>34</td><td>2,350</td><td>864.35</td><td class="win">294.41</td><td>1872.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>069</td><td>30</td><td>2,050</td><td class="win">564.33</td><td>594.44</td><td>2172.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>070</td><td>41</td><td>3,100</td><td>1614.38</td><td class="win">455.62</td><td>1122.06</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>071</td><td>36</td><td>2,600</td><td>1114.36</td><td class="win">44.41</td><td>1622.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>072</td><td>52</td><td>4,100</td><td>2614.44</td><td>1455.68</td><td class="win">122.0</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>073</td><td>27</td><td>1,750</td><td class="win">264.31</td><td>894.45</td><td>2472.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>074</td><td>33</td><td>2,300</td><td>814.34</td><td class="win">344.42</td><td>1922.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>075</td><td>45</td><td>3,350</td><td>1864.41</td><td class="win">705.65</td><td>872.03</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>076</td><td>54</td><td>4,450</td><td>2964.45</td><td>1805.68</td><td class="win">228.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>077</td><td>23</td><td>1,300</td><td class="win">185.71</td><td>1344.47</td><td>2922.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>078</td><td>35</td><td>2,500</td><td>1014.35</td><td class="win">144.41</td><td>1722.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>079</td><td>29</td><td>2,000</td><td class="win">514.32</td><td>644.45</td><td>2222.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>080</td><td>47</td><td>3,400</td><td>1914.43</td><td class="win">755.67</td><td>822.02</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>081</td><td>51</td><td>4,050</td><td>2564.44</td><td>1405.67</td><td class="win">172.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>082</td><td>26</td><td>1,700</td><td class="win">214.31</td><td>944.46</td><td>2522.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>083</td><td>31</td><td>2,150</td><td>664.33</td><td class="win">494.44</td><td>2072.11</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>084</td><td>38</td><td>2,900</td><td>1414.36</td><td class="win">255.6</td><td>1322.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>085</td><td>49</td><td>3,600</td><td>2114.44</td><td>955.68</td><td class="win">622.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>086</td><td>56</td><td>4,750</td><td>3264.45</td><td>2105.69</td><td class="win">528.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>087</td><td>22</td><td>1,200</td><td class="win">285.71</td><td>1444.48</td><td>3022.15</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>088</td><td>34</td><td>2,400</td><td>914.35</td><td class="win">244.42</td><td>1822.09</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>089</td><td>30</td><td>2,100</td><td>614.32</td><td class="win">544.44</td><td>2122.12</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>090</td><td>42</td><td>3,200</td><td>1714.39</td><td class="win">555.62</td><td>1022.05</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>091</td><td>37</td><td>2,800</td><td>1314.36</td><td class="win">155.6</td><td>1422.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>092</td><td>50</td><td>3,900</td><td>2414.43</td><td>1255.67</td><td class="win">322.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>093</td><td>28</td><td>1,850</td><td class="win">364.32</td><td>794.45</td><td>2372.13</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>094</td><td>33</td><td>2,250</td><td>764.35</td><td class="win">394.42</td><td>1972.1</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>095</td><td>44</td><td>3,300</td><td>1814.4</td><td class="win">655.64</td><td>922.04</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>096</td><td>55</td><td>4,600</td><td>3114.45</td><td>1955.68</td><td class="win">378.01</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>097</td><td>24</td><td>1,400</td><td class="win">85.7</td><td>1244.47</td><td>2822.14</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>098</td><td>36</td><td>2,600</td><td>1114.36</td><td class="win">44.41</td><td>1622.08</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>099</td><td>29</td><td>1,950</td><td class="win">464.32</td><td>694.44</td><td>2272.12</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>100</td><td>48</td><td>3,550</td><td>2064.43</td><td>905.67</td><td class="win">672.01</td><td class="cluster-c3">C3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 2 — Cluster assignments &nbsp;·&nbsp; 100 points &nbsp;·&nbsp; Hover for coordinates</p>
+      <div class="chart-container"><canvas id="scatter2"></canvas></div>
+    </div>
+
+    <div class="centroids-row">
+      <div class="centroid-card"><p class="centroid-label c1">C1 → New</p><p class="centroid-val">(25.7, 1620.7)</p><p class="centroid-count">29 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c2">C2 → New</p><p class="centroid-val">(37.8, 2728.4)</p><p class="centroid-count">44 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c3">C3 → New</p><p class="centroid-val">(52.1, 4166.7)</p><p class="centroid-count">27 points assigned</p></div>
+    </div>
+
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 2 — SSE (Variance) per cluster</p>
+      <div class="chart-container"><canvas id="var2"></canvas></div>
+    </div>
+    <div class="variance-grid">
+      <div class="var-item"><p class="var-key">SSE — C1</p><p class="var-val">3,151,297</p></div>
+      <div class="var-item"><p class="var-key">SSE — C2</p><p class="var-val">8,228,645</p></div>
+      <div class="var-item"><p class="var-key">SSE — C3</p><p class="var-val">5,557,932</p></div>
+      <div class="var-item" style="grid-column:1/-1;">
+        <p class="var-key">Total SSE</p><p class="var-val">16,937,874</p>
+        <p class="var-delta">&#8595; 33.0% reduction from iteration 1</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ITERATION 3
+    ═══════════════════════════════════════════ -->
+    <p class="section-label">Iteration 3</p>
+    <div class="iter-header"><span class="iter-num">03</span><span class="iter-title">Updated centroids · C1=(25.7,1620.7) C2=(37.8,2728.4) C3=(52.1,4166.7)</span></div>
+
+    <div class="content-block">
+      <p class="block-title">Distance Calculations — All 100 Points</p>
+      <div class="dist-table-wrap">
+        <table class="dist-table">
+          <thead><tr><th>ID</th><th>Age</th><th>Income</th><th>d → C1</th><th>d → C2</th><th>d → C3</th><th>Cluster</th></tr></thead>
+          <tbody>
+            <tr><td>001</td><td>22</td><td>1,200</td><td class="win">420.72</td><td>1528.48</td><td>2966.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>002</td><td>25</td><td>1,500</td><td class="win">120.7</td><td>1228.47</td><td>2666.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>003</td><td>47</td><td>3,200</td><td>1579.44</td><td class="win">471.69</td><td>966.71</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>004</td><td>52</td><td>4,100</td><td>2479.44</td><td>1371.67</td><td class="win">66.7</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>005</td><td>46</td><td>3,000</td><td>1379.45</td><td class="win">271.72</td><td>1166.72</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>006</td><td>56</td><td>4,800</td><td>3179.44</td><td>2071.68</td><td class="win">633.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>007</td><td>23</td><td>1,300</td><td class="win">320.71</td><td>1428.48</td><td>2866.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>008</td><td>34</td><td>2,200</td><td>579.36</td><td class="win">528.41</td><td>1966.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>009</td><td>29</td><td>2,000</td><td class="win">379.31</td><td>728.45</td><td>2166.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>010</td><td>41</td><td>3,100</td><td>1479.38</td><td class="win">371.61</td><td>1066.76</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>011</td><td>38</td><td>2,800</td><td>1179.36</td><td class="win">71.6</td><td>1366.77</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>012</td><td>50</td><td>3,900</td><td>2279.43</td><td>1171.66</td><td class="win">266.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>013</td><td>27</td><td>1,800</td><td class="win">179.3</td><td>928.46</td><td>2366.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>014</td><td>31</td><td>2,100</td><td class="win">479.33</td><td>628.44</td><td>2066.81</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>015</td><td>44</td><td>3,300</td><td>1679.4</td><td class="win">571.63</td><td>866.74</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>016</td><td>55</td><td>4,600</td><td>2979.44</td><td>1871.68</td><td class="win">433.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>017</td><td>24</td><td>1,400</td><td class="win">220.71</td><td>1328.47</td><td>2766.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>018</td><td>36</td><td>2,600</td><td>979.35</td><td class="win">128.41</td><td>1566.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>019</td><td>28</td><td>1,900</td><td class="win">279.31</td><td>828.46</td><td>2266.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>020</td><td>49</td><td>3,700</td><td>2079.43</td><td>971.66</td><td class="win">466.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>021</td><td>53</td><td>4,200</td><td>2579.44</td><td>1471.68</td><td class="win">33.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>022</td><td>26</td><td>1,700</td><td class="win">79.3</td><td>1028.47</td><td>2466.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>023</td><td>33</td><td>2,300</td><td>679.34</td><td class="win">428.43</td><td>1866.8</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>024</td><td>39</td><td>2,900</td><td>1279.37</td><td class="win">171.6</td><td>1266.77</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>025</td><td>48</td><td>3,600</td><td>1979.43</td><td>871.66</td><td class="win">566.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>026</td><td>57</td><td>4,900</td><td>3279.45</td><td>2171.68</td><td class="win">733.32</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>027</td><td>21</td><td>1,100</td><td class="win">520.72</td><td>1628.49</td><td>3066.86</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>028</td><td>35</td><td>2,500</td><td>879.35</td><td class="win">228.42</td><td>1666.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>029</td><td>30</td><td>2,050</td><td class="win">429.32</td><td>678.44</td><td>2116.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>030</td><td>42</td><td>3,150</td><td>1529.39</td><td class="win">421.62</td><td>1016.75</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>031</td><td>37</td><td>2,750</td><td>1129.36</td><td class="win">21.61</td><td>1416.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>032</td><td>51</td><td>4,000</td><td>2379.43</td><td>1271.67</td><td class="win">166.7</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>033</td><td>28</td><td>1,850</td><td class="win">229.31</td><td>878.45</td><td>2316.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>034</td><td>32</td><td>2,150</td><td class="win">529.34</td><td>578.43</td><td>2016.8</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>035</td><td>45</td><td>3,350</td><td>1729.41</td><td class="win">621.64</td><td>816.73</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>036</td><td>54</td><td>4,500</td><td>2879.44</td><td>1771.67</td><td class="win">333.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>037</td><td>23</td><td>1,350</td><td class="win">270.71</td><td>1378.48</td><td>2816.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>038</td><td>36</td><td>2,550</td><td>929.36</td><td class="win">178.41</td><td>1616.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>039</td><td>29</td><td>1,950</td><td class="win">329.32</td><td>778.45</td><td>2216.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>040</td><td>47</td><td>3,400</td><td>1779.43</td><td class="win">671.66</td><td>766.72</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>041</td><td>52</td><td>4,300</td><td>2679.43</td><td>1571.66</td><td class="win">133.3</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>042</td><td>27</td><td>1,750</td><td class="win">129.31</td><td>978.46</td><td>2416.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>043</td><td>34</td><td>2,250</td><td>629.35</td><td class="win">478.42</td><td>1916.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>044</td><td>40</td><td>2,950</td><td>1329.38</td><td class="win">221.61</td><td>1216.76</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>045</td><td>49</td><td>3,650</td><td>2029.43</td><td>921.67</td><td class="win">516.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>046</td><td>56</td><td>4,700</td><td>3079.45</td><td>1971.68</td><td class="win">533.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>047</td><td>22</td><td>1,250</td><td class="win">370.72</td><td>1478.48</td><td>2916.86</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>048</td><td>33</td><td>2,400</td><td>779.33</td><td class="win">328.44</td><td>1766.8</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>049</td><td>31</td><td>2,100</td><td class="win">479.33</td><td>628.44</td><td>2066.81</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>050</td><td>43</td><td>3,200</td><td>1579.39</td><td class="win">471.63</td><td>966.74</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>051</td><td>38</td><td>2,850</td><td>1229.36</td><td class="win">121.6</td><td>1316.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>052</td><td>50</td><td>3,950</td><td>2329.43</td><td>1221.66</td><td class="win">216.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>053</td><td>26</td><td>1,650</td><td class="win">29.3</td><td>1078.46</td><td>2516.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>054</td><td>35</td><td>2,450</td><td>829.35</td><td class="win">278.41</td><td>1716.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>055</td><td>44</td><td>3,300</td><td>1679.4</td><td class="win">571.63</td><td>866.74</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>056</td><td>55</td><td>4,550</td><td>2929.45</td><td>1821.68</td><td class="win">383.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>057</td><td>24</td><td>1,450</td><td class="win">170.71</td><td>1278.47</td><td>2716.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>058</td><td>37</td><td>2,700</td><td>1079.36</td><td class="win">28.41</td><td>1466.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>059</td><td>28</td><td>1,900</td><td class="win">279.31</td><td>828.46</td><td>2266.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>060</td><td>48</td><td>3,500</td><td>1879.43</td><td>771.67</td><td class="win">666.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>061</td><td>53</td><td>4,250</td><td>2629.44</td><td>1521.68</td><td class="win">83.3</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>062</td><td>25</td><td>1,550</td><td class="win">70.7</td><td>1178.47</td><td>2616.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>063</td><td>32</td><td>2,200</td><td>579.33</td><td class="win">528.43</td><td>1966.8</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>064</td><td>39</td><td>3,000</td><td>1379.36</td><td class="win">271.6</td><td>1166.77</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>065</td><td>46</td><td>3,450</td><td>1829.41</td><td>721.65</td><td class="win">716.73</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>066</td><td>57</td><td>4,850</td><td>3229.45</td><td>2121.69</td><td class="win">683.32</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>067</td><td>21</td><td>1,150</td><td class="win">470.72</td><td>1578.49</td><td>3016.86</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>068</td><td>34</td><td>2,350</td><td>729.35</td><td class="win">378.42</td><td>1816.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>069</td><td>30</td><td>2,050</td><td class="win">429.32</td><td>678.44</td><td>2116.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>070</td><td>41</td><td>3,100</td><td>1479.38</td><td class="win">371.61</td><td>1066.76</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>071</td><td>36</td><td>2,600</td><td>979.35</td><td class="win">128.41</td><td>1566.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>072</td><td>52</td><td>4,100</td><td>2479.44</td><td>1371.67</td><td class="win">66.7</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>073</td><td>27</td><td>1,750</td><td class="win">129.31</td><td>978.46</td><td>2416.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>074</td><td>33</td><td>2,300</td><td>679.34</td><td class="win">428.43</td><td>1866.8</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>075</td><td>45</td><td>3,350</td><td>1729.41</td><td class="win">621.64</td><td>816.73</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>076</td><td>54</td><td>4,450</td><td>2829.44</td><td>1721.68</td><td class="win">283.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>077</td><td>23</td><td>1,300</td><td class="win">320.71</td><td>1428.48</td><td>2866.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>078</td><td>35</td><td>2,500</td><td>879.35</td><td class="win">228.42</td><td>1666.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>079</td><td>29</td><td>2,000</td><td class="win">379.31</td><td>728.45</td><td>2166.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>080</td><td>47</td><td>3,400</td><td>1779.43</td><td class="win">671.66</td><td>766.72</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>081</td><td>51</td><td>4,050</td><td>2429.43</td><td>1321.67</td><td class="win">116.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>082</td><td>26</td><td>1,700</td><td class="win">79.3</td><td>1028.47</td><td>2466.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>083</td><td>31</td><td>2,150</td><td class="win">529.33</td><td>578.44</td><td>2016.81</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>084</td><td>38</td><td>2,900</td><td>1279.36</td><td class="win">171.6</td><td>1266.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>085</td><td>49</td><td>3,600</td><td>1979.44</td><td>871.67</td><td class="win">566.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>086</td><td>56</td><td>4,750</td><td>3129.45</td><td>2021.68</td><td class="win">583.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>087</td><td>22</td><td>1,200</td><td class="win">420.72</td><td>1528.48</td><td>2966.85</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>088</td><td>34</td><td>2,400</td><td>779.34</td><td class="win">328.42</td><td>1766.79</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>089</td><td>30</td><td>2,100</td><td class="win">479.32</td><td>628.45</td><td>2066.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>090</td><td>42</td><td>3,200</td><td>1579.38</td><td class="win">471.62</td><td>966.75</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>091</td><td>37</td><td>2,800</td><td>1179.35</td><td class="win">71.6</td><td>1366.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>092</td><td>50</td><td>3,900</td><td>2279.43</td><td>1171.66</td><td class="win">266.71</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>093</td><td>28</td><td>1,850</td><td class="win">229.31</td><td>878.45</td><td>2316.83</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>094</td><td>33</td><td>2,250</td><td>629.34</td><td class="win">478.42</td><td>1916.8</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>095</td><td>44</td><td>3,300</td><td>1679.4</td><td class="win">571.63</td><td>866.74</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>096</td><td>55</td><td>4,600</td><td>2979.44</td><td>1871.68</td><td class="win">433.31</td><td class="cluster-c3">C3</td></tr>
+            <tr><td>097</td><td>24</td><td>1,400</td><td class="win">220.71</td><td>1328.47</td><td>2766.84</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>098</td><td>36</td><td>2,600</td><td>979.35</td><td class="win">128.41</td><td>1566.78</td><td class="cluster-c2">C2</td></tr>
+            <tr><td>099</td><td>29</td><td>1,950</td><td class="win">329.32</td><td>778.45</td><td>2216.82</td><td class="cluster-c1">C1</td></tr>
+            <tr><td>100</td><td>48</td><td>3,550</td><td>1929.43</td><td>821.66</td><td class="win">616.71</td><td class="cluster-c3">C3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 3 — Cluster assignments &nbsp;·&nbsp; 100 points &nbsp;·&nbsp; Hover for coordinates</p>
+      <div class="chart-container"><canvas id="scatter3"></canvas></div>
+    </div>
+
+    <div class="centroids-row">
+      <div class="centroid-card"><p class="centroid-label c1">C1 — Final</p><p class="centroid-val">(25.7, 1620.7)</p><p class="centroid-count">34 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c2">C2 — Final</p><p class="centroid-val">(37.8, 2728.4)</p><p class="centroid-count">39 points assigned</p></div>
+      <div class="centroid-card"><p class="centroid-label c3">C3 — Final</p><p class="centroid-val">(52.1, 4166.7)</p><p class="centroid-count">27 points assigned</p></div>
+    </div>
+
+    <div class="chart-wrap">
+      <p class="chart-meta">Iteration 3 — SSE (Variance) per cluster</p>
+      <div class="chart-container"><canvas id="var3"></canvas></div>
+    </div>
+    <div class="variance-grid">
+      <div class="var-item"><p class="var-key">SSE — C1</p><p class="var-val">3,872,455</p></div>
+      <div class="var-item"><p class="var-key">SSE — C2</p><p class="var-val">6,064,089</p></div>
+      <div class="var-item"><p class="var-key">SSE — C3</p><p class="var-val">5,475,260</p></div>
+      <div class="var-item" style="grid-column:1/-1;">
+        <p class="var-key">Total SSE</p><p class="var-val">15,411,803</p>
+        <p class="var-delta">&#8595; 9.0% reduction from iteration 2 — approaching convergence</p>
+      </div>
+    </div>
+
+    <!-- Comparison & interpretation -->
+    <p class="section-label">Variance Comparison &amp; Interpretation</p>
+    <div class="chart-wrap">
+      <p class="chart-meta">Total SSE across iterations — convergence trend</p>
+      <div class="chart-container"><canvas id="varComparison"></canvas></div>
+    </div>
+
+    <div class="content-block">
+      <p class="block-title">Interpretation of results</p>
+      <p>The total SSE decreased significantly across the three iterations — from <strong>25,285,114</strong> in iteration 1 to <strong>15,411,803</strong> in iteration 3, a total reduction of approximately <strong>39%</strong>. This confirms that the algorithm progressively moved centroids toward more compact and representative positions.</p>
+      <p>The largest improvement occurred between iterations 1 and 2 (−33%), driven by the redistribution of boundary points between clusters. By iteration 3, the SSE curve began to flatten, indicating that the model was approaching convergence — a near-optimal clustering solution.</p>
+    </div>
+    <div class="content-block">
+      <p class="block-title">Final clustering result</p>
+      <ul>
+        <li><strong>Cluster 1 (blue):</strong> young individuals (21–32 years) with low income (1,100–2,150 USD) — likely early-career or junior profiles.</li>
+        <li><strong>Cluster 2 (green):</strong> middle-aged individuals (32–47 years) with moderate income (2,200–3,450 USD) — mid-career professionals.</li>
+        <li><strong>Cluster 3 (red):</strong> older individuals (46–57 years) with high income (3,500–4,900 USD) — senior or experienced profiles.</li>
+      </ul>
+    </div>
+    <div class="content-block">
+      <p class="block-title">Convergence assessment</p>
+      <p>After iteration 3, centroids showed minimal movement and cluster assignments were largely stable. The algorithm can be considered converged — running additional iterations would produce negligible improvements in SSE.</p>
+    </div>
+
+  </main>
+
+  <footer>
+    <p class="footer-label">Group Members</p>
+    <div class="members">
+      <span class="member">Elkin Yamith Almonacid López</span>
+      <span class="member">Brayan David Cuitiva Umbarila</span>
+      <span class="member">Brayan Yair Mendez Rodriguez</span>
+    </div>
+    <p class="university">Universidad de Cundinamarca</p>
+  </footer>
+</div>
+
+<script>
+// ── Dataset per iteration ──────────────────────────────────────────────────
+const D = {"it1":{"c1":[{"x":22,"y":1200,"id":1},{"x":25,"y":1500,"id":2},{"x":23,"y":1300,"id":7},{"x":27,"y":1800,"id":13},{"x":24,"y":1400,"id":17},{"x":26,"y":1700,"id":22},{"x":21,"y":1100,"id":27},{"x":28,"y":1850,"id":33},{"x":23,"y":1350,"id":37},{"x":27,"y":1750,"id":42},{"x":22,"y":1250,"id":47},{"x":26,"y":1650,"id":53},{"x":24,"y":1450,"id":57},{"x":25,"y":1550,"id":62},{"x":21,"y":1150,"id":67},{"x":27,"y":1750,"id":73},{"x":23,"y":1300,"id":77},{"x":26,"y":1700,"id":82},{"x":22,"y":1200,"id":87},{"x":28,"y":1850,"id":93},{"x":24,"y":1400,"id":97}],"c2":[{"x":47,"y":3200,"id":3},{"x":46,"y":3000,"id":5},{"x":34,"y":2200,"id":8},{"x":29,"y":2000,"id":9},{"x":41,"y":3100,"id":10},{"x":38,"y":2800,"id":11},{"x":31,"y":2100,"id":14},{"x":44,"y":3300,"id":15},{"x":36,"y":2600,"id":18},{"x":28,"y":1900,"id":19},{"x":33,"y":2300,"id":23},{"x":39,"y":2900,"id":24},{"x":35,"y":2500,"id":28},{"x":30,"y":2050,"id":29},{"x":42,"y":3150,"id":30},{"x":37,"y":2750,"id":31},{"x":32,"y":2150,"id":34},{"x":45,"y":3350,"id":35},{"x":36,"y":2550,"id":38},{"x":29,"y":1950,"id":39},{"x":47,"y":3400,"id":40},{"x":34,"y":2250,"id":43},{"x":40,"y":2950,"id":44},{"x":33,"y":2400,"id":48},{"x":31,"y":2100,"id":49},{"x":43,"y":3200,"id":50},{"x":38,"y":2850,"id":51},{"x":35,"y":2450,"id":54},{"x":44,"y":3300,"id":55},{"x":37,"y":2700,"id":58},{"x":28,"y":1900,"id":59},{"x":48,"y":3500,"id":60},{"x":32,"y":2200,"id":63},{"x":39,"y":3000,"id":64},{"x":46,"y":3450,"id":65},{"x":34,"y":2350,"id":68},{"x":30,"y":2050,"id":69},{"x":41,"y":3100,"id":70},{"x":36,"y":2600,"id":71},{"x":33,"y":2300,"id":74},{"x":45,"y":3350,"id":75},{"x":35,"y":2500,"id":78},{"x":29,"y":2000,"id":79},{"x":47,"y":3400,"id":80},{"x":31,"y":2150,"id":83},{"x":38,"y":2900,"id":84},{"x":34,"y":2400,"id":88},{"x":30,"y":2100,"id":89},{"x":42,"y":3200,"id":90},{"x":37,"y":2800,"id":91},{"x":33,"y":2250,"id":94},{"x":44,"y":3300,"id":95},{"x":36,"y":2600,"id":98},{"x":29,"y":1950,"id":99}],"c3":[{"x":52,"y":4100,"id":4},{"x":56,"y":4800,"id":6},{"x":50,"y":3900,"id":12},{"x":55,"y":4600,"id":16},{"x":49,"y":3700,"id":20},{"x":53,"y":4200,"id":21},{"x":48,"y":3600,"id":25},{"x":57,"y":4900,"id":26},{"x":51,"y":4000,"id":32},{"x":54,"y":4500,"id":36},{"x":52,"y":4300,"id":41},{"x":49,"y":3650,"id":45},{"x":56,"y":4700,"id":46},{"x":50,"y":3950,"id":52},{"x":55,"y":4550,"id":56},{"x":53,"y":4250,"id":61},{"x":57,"y":4850,"id":66},{"x":52,"y":4100,"id":72},{"x":54,"y":4450,"id":76},{"x":51,"y":4050,"id":81},{"x":49,"y":3600,"id":85},{"x":56,"y":4750,"id":86},{"x":50,"y":3900,"id":92},{"x":55,"y":4600,"id":96},{"x":48,"y":3550,"id":100}]},"it2":{"c1":[{"x":22,"y":1200,"id":1},{"x":25,"y":1500,"id":2},{"x":23,"y":1300,"id":7},{"x":29,"y":2000,"id":9},{"x":27,"y":1800,"id":13},{"x":24,"y":1400,"id":17},{"x":28,"y":1900,"id":19},{"x":26,"y":1700,"id":22},{"x":21,"y":1100,"id":27},{"x":30,"y":2050,"id":29},{"x":28,"y":1850,"id":33},{"x":23,"y":1350,"id":37},{"x":29,"y":1950,"id":39},{"x":27,"y":1750,"id":42},{"x":22,"y":1250,"id":47},{"x":26,"y":1650,"id":53},{"x":24,"y":1450,"id":57},{"x":28,"y":1900,"id":59},{"x":25,"y":1550,"id":62},{"x":21,"y":1150,"id":67},{"x":30,"y":2050,"id":69},{"x":27,"y":1750,"id":73},{"x":23,"y":1300,"id":77},{"x":29,"y":2000,"id":79},{"x":26,"y":1700,"id":82},{"x":22,"y":1200,"id":87},{"x":28,"y":1850,"id":93},{"x":24,"y":1400,"id":97},{"x":29,"y":1950,"id":99}],"c2":[{"x":47,"y":3200,"id":3},{"x":46,"y":3000,"id":5},{"x":34,"y":2200,"id":8},{"x":41,"y":3100,"id":10},{"x":38,"y":2800,"id":11},{"x":31,"y":2100,"id":14},{"x":44,"y":3300,"id":15},{"x":36,"y":2600,"id":18},{"x":33,"y":2300,"id":23},{"x":39,"y":2900,"id":24},{"x":35,"y":2500,"id":28},{"x":42,"y":3150,"id":30},{"x":37,"y":2750,"id":31},{"x":32,"y":2150,"id":34},{"x":45,"y":3350,"id":35},{"x":36,"y":2550,"id":38},{"x":47,"y":3400,"id":40},{"x":34,"y":2250,"id":43},{"x":40,"y":2950,"id":44},{"x":33,"y":2400,"id":48},{"x":31,"y":2100,"id":49},{"x":43,"y":3200,"id":50},{"x":38,"y":2850,"id":51},{"x":35,"y":2450,"id":54},{"x":44,"y":3300,"id":55},{"x":37,"y":2700,"id":58},{"x":32,"y":2200,"id":63},{"x":39,"y":3000,"id":64},{"x":34,"y":2350,"id":68},{"x":41,"y":3100,"id":70},{"x":36,"y":2600,"id":71},{"x":33,"y":2300,"id":74},{"x":45,"y":3350,"id":75},{"x":35,"y":2500,"id":78},{"x":47,"y":3400,"id":80},{"x":31,"y":2150,"id":83},{"x":38,"y":2900,"id":84},{"x":34,"y":2400,"id":88},{"x":30,"y":2100,"id":89},{"x":42,"y":3200,"id":90},{"x":37,"y":2800,"id":91},{"x":33,"y":2250,"id":94},{"x":44,"y":3300,"id":95},{"x":36,"y":2600,"id":98}],"c3":[{"x":52,"y":4100,"id":4},{"x":56,"y":4800,"id":6},{"x":50,"y":3900,"id":12},{"x":55,"y":4600,"id":16},{"x":49,"y":3700,"id":20},{"x":53,"y":4200,"id":21},{"x":48,"y":3600,"id":25},{"x":57,"y":4900,"id":26},{"x":51,"y":4000,"id":32},{"x":54,"y":4500,"id":36},{"x":52,"y":4300,"id":41},{"x":49,"y":3650,"id":45},{"x":56,"y":4700,"id":46},{"x":50,"y":3950,"id":52},{"x":55,"y":4550,"id":56},{"x":48,"y":3500,"id":60},{"x":53,"y":4250,"id":61},{"x":46,"y":3450,"id":65},{"x":57,"y":4850,"id":66},{"x":52,"y":4100,"id":72},{"x":54,"y":4450,"id":76},{"x":51,"y":4050,"id":81},{"x":49,"y":3600,"id":85},{"x":56,"y":4750,"id":86},{"x":50,"y":3900,"id":92},{"x":55,"y":4600,"id":96},{"x":48,"y":3550,"id":100}]},"it3":{"c1":[{"x":22,"y":1200,"id":1},{"x":25,"y":1500,"id":2},{"x":23,"y":1300,"id":7},{"x":29,"y":2000,"id":9},{"x":27,"y":1800,"id":13},{"x":31,"y":2100,"id":14},{"x":24,"y":1400,"id":17},{"x":28,"y":1900,"id":19},{"x":26,"y":1700,"id":22},{"x":21,"y":1100,"id":27},{"x":30,"y":2050,"id":29},{"x":28,"y":1850,"id":33},{"x":32,"y":2150,"id":34},{"x":23,"y":1350,"id":37},{"x":29,"y":1950,"id":39},{"x":27,"y":1750,"id":42},{"x":22,"y":1250,"id":47},{"x":31,"y":2100,"id":49},{"x":26,"y":1650,"id":53},{"x":24,"y":1450,"id":57},{"x":28,"y":1900,"id":59},{"x":25,"y":1550,"id":62},{"x":21,"y":1150,"id":67},{"x":30,"y":2050,"id":69},{"x":27,"y":1750,"id":73},{"x":23,"y":1300,"id":77},{"x":29,"y":2000,"id":79},{"x":26,"y":1700,"id":82},{"x":31,"y":2150,"id":83},{"x":22,"y":1200,"id":87},{"x":30,"y":2100,"id":89},{"x":28,"y":1850,"id":93},{"x":24,"y":1400,"id":97},{"x":29,"y":1950,"id":99}],"c2":[{"x":47,"y":3200,"id":3},{"x":46,"y":3000,"id":5},{"x":34,"y":2200,"id":8},{"x":41,"y":3100,"id":10},{"x":38,"y":2800,"id":11},{"x":44,"y":3300,"id":15},{"x":36,"y":2600,"id":18},{"x":33,"y":2300,"id":23},{"x":39,"y":2900,"id":24},{"x":35,"y":2500,"id":28},{"x":42,"y":3150,"id":30},{"x":37,"y":2750,"id":31},{"x":45,"y":3350,"id":35},{"x":36,"y":2550,"id":38},{"x":47,"y":3400,"id":40},{"x":34,"y":2250,"id":43},{"x":40,"y":2950,"id":44},{"x":33,"y":2400,"id":48},{"x":43,"y":3200,"id":50},{"x":38,"y":2850,"id":51},{"x":35,"y":2450,"id":54},{"x":44,"y":3300,"id":55},{"x":37,"y":2700,"id":58},{"x":32,"y":2200,"id":63},{"x":39,"y":3000,"id":64},{"x":34,"y":2350,"id":68},{"x":41,"y":3100,"id":70},{"x":36,"y":2600,"id":71},{"x":33,"y":2300,"id":74},{"x":45,"y":3350,"id":75},{"x":35,"y":2500,"id":78},{"x":47,"y":3400,"id":80},{"x":38,"y":2900,"id":84},{"x":34,"y":2400,"id":88},{"x":42,"y":3200,"id":90},{"x":37,"y":2800,"id":91},{"x":33,"y":2250,"id":94},{"x":44,"y":3300,"id":95},{"x":36,"y":2600,"id":98}],"c3":[{"x":52,"y":4100,"id":4},{"x":56,"y":4800,"id":6},{"x":50,"y":3900,"id":12},{"x":55,"y":4600,"id":16},{"x":49,"y":3700,"id":20},{"x":53,"y":4200,"id":21},{"x":48,"y":3600,"id":25},{"x":57,"y":4900,"id":26},{"x":51,"y":4000,"id":32},{"x":54,"y":4500,"id":36},{"x":52,"y":4300,"id":41},{"x":49,"y":3650,"id":45},{"x":56,"y":4700,"id":46},{"x":50,"y":3950,"id":52},{"x":55,"y":4550,"id":56},{"x":48,"y":3500,"id":60},{"x":53,"y":4250,"id":61},{"x":46,"y":3450,"id":65},{"x":57,"y":4850,"id":66},{"x":52,"y":4100,"id":72},{"x":54,"y":4450,"id":76},{"x":51,"y":4050,"id":81},{"x":49,"y":3600,"id":85},{"x":56,"y":4750,"id":86},{"x":50,"y":3900,"id":92},{"x":55,"y":4600,"id":96},{"x":48,"y":3550,"id":100}]}};
+
+const C1='#2563eb', C2='#16a34a', C3='#dc2626';
+const MONO = "'IBM Plex Mono'";
+const scaleOpts = {
+  x:{type:'linear',min:18,max:60,title:{display:true,text:'Age (years)',font:{family:MONO,size:10},color:'#7a7870'},ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{color:'#e8e6e0'}},
+  y:{type:'linear',min:900,max:5100,title:{display:true,text:'Income (USD)',font:{family:MONO,size:10},color:'#7a7870'},ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{color:'#e8e6e0'}}
+};
+
+function makeScatter(canvasId, it){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type:'scatter',
+    data:{datasets:[
+      {label:'Cluster 1',data:D[it].c1,backgroundColor:C1+'cc',pointRadius:5,pointHoverRadius:7},
+      {label:'Cluster 2',data:D[it].c2,backgroundColor:C2+'cc',pointRadius:5,pointHoverRadius:7},
+      {label:'Cluster 3',data:D[it].c3,backgroundColor:C3+'cc',pointRadius:5,pointHoverRadius:7},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{family:MONO,size:10},color:'#7a7870',boxWidth:10,padding:14}},
+        tooltip:{callbacks:{label:ctx=>' ID '+ctx.raw.id+' — Age: '+ctx.parsed.x+' · Income: $'+ctx.parsed.y},
+          titleFont:{family:MONO,size:11},bodyFont:{family:"'IBM Plex Sans'",size:11}}
+      },
+      scales:scaleOpts
+    }
+  });
+}
+
+function makeVar(canvasId, c1sse, c2sse, c3sse){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['Cluster 1','Cluster 2','Cluster 3'],
+      datasets:[{label:'SSE',data:[c1sse,c2sse,c3sse],backgroundColor:[C1+'cc',C2+'cc',C3+'cc'],borderRadius:3,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' SSE: '+ctx.raw.toLocaleString()},
+          titleFont:{family:MONO,size:11},bodyFont:{family:"'IBM Plex Sans'",size:11}}
+      },
+      scales:{
+        x:{ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{display:false}},
+        y:{ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{color:'#e8e6e0'},
+           title:{display:true,text:'SSE',font:{family:MONO,size:10},color:'#7a7870'}}
+      }
+    }
+  });
+}
+
+makeScatter('scatter1','it1');
+makeScatter('scatter2','it2');
+makeScatter('scatter3','it3');
+makeVar('var1',2925230,14347023,8012861);
+makeVar('var2',3151297,8228645,5557932);
+makeVar('var3',3872455,6064089,5475260);
+
+// Comparison chart
+(function(){
+  const ctx = document.getElementById('varComparison').getContext('2d');
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:['Iteration 1','Iteration 2','Iteration 3'],
+      datasets:[
+        {label:'Total SSE',data:[25285114,16937874,15411803],borderColor:'#111110',backgroundColor:'rgba(17,17,16,0.08)',borderWidth:2.5,pointRadius:6,pointHoverRadius:8,fill:true,tension:0.3},
+        {label:'C1 SSE',data:[2925230,3151297,3872455],borderColor:C1,backgroundColor:'transparent',borderWidth:1.5,pointRadius:4,borderDash:[4,3],tension:0.3},
+        {label:'C2 SSE',data:[14347023,8228645,6064089],borderColor:C2,backgroundColor:'transparent',borderWidth:1.5,pointRadius:4,borderDash:[4,3],tension:0.3},
+        {label:'C3 SSE',data:[8012861,5557932,5475260],borderColor:C3,backgroundColor:'transparent',borderWidth:1.5,pointRadius:4,borderDash:[4,3],tension:0.3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{family:MONO,size:10},color:'#7a7870',boxWidth:12,padding:14}},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.raw.toLocaleString()},
+          titleFont:{family:MONO,size:11},bodyFont:{family:"'IBM Plex Sans'",size:11}}
+      },
+      scales:{
+        x:{ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{color:'#e8e6e0'}},
+        y:{ticks:{font:{family:MONO,size:10},color:'#7a7870'},grid:{color:'#e8e6e0'},
+           title:{display:true,text:'SSE Value',font:{family:MONO,size:10},color:'#7a7870'}}
+      }
+    }
+  });
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
