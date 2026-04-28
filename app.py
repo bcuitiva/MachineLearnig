@@ -1,18 +1,16 @@
 from flask import Flask, render_template, request
+import pandas as pd
 from LinearRegression_Weight import (predecir_peso, actual_values, predicted_values)
 import LinearRegression_Weight
 import logisticRegressionDiabetes
 import RidgeClassifierStudents
+import Clustering
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return render_template('start.html')
-
-@app.route('/FirstPage')
-def firstPage():
-    return render_template('index.html')
 
 @app.route('/useCases')
 def useCases():
@@ -142,3 +140,31 @@ def RCApp():
     roc_points=RidgeClassifierStudents.roc_points,
     auc=round(RidgeClassifierStudents.auc_val, 3)
 )
+
+@app.route('/LinearRegression', methods=["GET","POST"])
+def calculateGrade():
+    calculateResult = None
+    if request.method == "POST":
+        hours = float(request.form["hours"])
+        calculateResult = LinearRegression.calculateGrade(hours)
+    return render_template('linearRegressionGrades.html', result = calculateResult) 
+
+@app.route('/unsupervisedML')
+def unsupervisedML():
+    return render_template('unsupervisedML.html')
+
+@app.route('/unsupervisedConcepts')
+def unsupervisedConcepts():
+    return render_template('unsupervisedConcepts.html')
+
+@app.route('/kmeansExercise')
+def kmeansExercise():
+    df = pd.read_csv('kmeans_dataset.csv')
+    records = df.to_dict(orient='records')
+    return render_template('kmeansExercise.html', records=records)
+
+@app.route('/clusteringApp')
+def clusteringApp():
+    data = Clustering.ApplyClusteringKmeans('marketing_campaign.csv')
+    return render_template('clusteringApp.html', data=data)
+

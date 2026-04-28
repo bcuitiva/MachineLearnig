@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unsupervised Learning — Basic Concepts</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#f5f4f0;--surface:#ffffff;--border:#d9d7d0;--text:#111110;--muted:#7a7870;--radius:4px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--tr:0.22s ease;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background-color:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;}
+    .page{flex:1;display:flex;flex-direction:column;max-width:720px;margin:0 auto;width:100%;padding:5rem 1.5rem 3rem;}
+    .back-link{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:3rem;transition:color var(--tr);}
+    .back-link:hover{color:var(--text);}
+    header{margin-bottom:4rem;}
+    .eyebrow{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1.1rem;}
+    h1{font-family:var(--mono);font-size:clamp(1.8rem,5vw,3rem);font-weight:600;letter-spacing:-0.03em;line-height:1.05;color:var(--text);margin-bottom:0.6rem;}
+    .subtitle{font-family:var(--sans);font-size:1rem;font-weight:300;color:var(--muted);}
+    .rule{width:32px;height:1px;background:var(--text);margin:1.6rem 0 0;}
+    .section-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;margin-top:2.5rem;}
+    .content-block{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:1.4rem 1.6rem;margin-bottom:0.5rem;}
+    .block-title{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);margin-bottom:0.7rem;}
+    .content-block p{font-size:0.9rem;font-weight:300;color:var(--text);line-height:1.75;margin-bottom:0.5rem;}
+    .content-block p:last-child{margin-bottom:0;}
+    .content-block ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.35rem;}
+    .content-block ul li{font-size:0.88rem;font-weight:300;color:var(--text);padding-left:1.4rem;position:relative;line-height:1.6;}
+    .content-block ul li::before{content:'—';position:absolute;left:0;color:var(--muted);font-family:var(--mono);font-size:0.75rem;}
+    .content-block ul li strong{font-weight:500;}
+    .formula-block{border:1px solid var(--text);border-radius:var(--radius);background:var(--text);padding:1.4rem 1.6rem;margin-bottom:0.5rem;text-align:center;}
+    .formula{font-family:var(--mono);font-size:clamp(1rem,2.5vw,1.3rem);font-weight:600;color:var(--bg);letter-spacing:0.03em;margin-bottom:0.75rem;}
+    .formula-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:0.4rem 1.2rem;}
+    .formula-item{font-family:var(--mono);font-size:0.68rem;color:rgba(245,244,240,0.5);}
+    .formula-item span{color:rgba(245,244,240,0.9);}
+    .steps{display:flex;flex-direction:column;}
+    .step{display:flex;gap:1rem;padding:0.85rem 0;border-bottom:1px solid var(--border);}
+    .step:last-child{border-bottom:none;padding-bottom:0;}
+    .step:first-child{padding-top:0;}
+    .step-num{font-family:var(--mono);font-size:0.6rem;color:var(--muted);flex-shrink:0;min-width:1.4rem;padding-top:0.1rem;}
+    .step-body{display:flex;flex-direction:column;gap:0.2rem;}
+    .step-title{font-size:0.88rem;font-weight:500;color:var(--text);}
+    .step-desc{font-size:0.78rem;font-weight:300;color:var(--muted);line-height:1.5;}
+    .apps-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;}
+    .app-item{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:1rem 1.2rem;}
+    .app-key{font-family:var(--mono);font-size:0.57rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;}
+    .app-val{font-size:0.85rem;font-weight:400;color:var(--text);line-height:1.45;}
+    footer{margin-top:4rem;border-top:1px solid var(--border);padding-top:2rem;}
+    .footer-label{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+    .members{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1.4rem;}
+    .member{font-size:0.88rem;font-weight:400;color:var(--text);}
+    .university{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.08em;color:var(--muted);}
+    @media(max-width:520px){.page{padding:3rem 1.2rem 2rem;}.apps-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="page">
+  <a href="{{ url_for('unsupervisedML') }}" class="back-link">&#8592; Unsupervised Machine Learning</a>
+  <header>
+    <p class="eyebrow">Module 03 &middot; Theory</p>
+    <h1>Basic Concepts</h1>
+    <p class="subtitle">Foundations of unsupervised learning, clustering, and the K-Means algorithm</p>
+    <div class="rule"></div>
+  </header>
+  <main>
+
+    <!-- 01 Unsupervised learning -->
+    <p class="section-label">01 &mdash; What is Unsupervised Learning?</p>
+    <div class="content-block">
+      <p>Unsupervised learning is a type of machine learning where the model works with <strong>unlabeled data</strong> — there are no predefined categories or correct output values. The algorithm must discover hidden patterns, structures, or relationships on its own.</p>
+      <p>Unlike supervised learning, where the model is guided by labeled examples, unsupervised learning lets the data speak for itself. This makes it especially useful when labeled data is scarce, expensive to obtain, or simply unavailable.</p>
+      <ul>
+        <li><strong>No labels required:</strong> the model learns directly from raw input data.</li>
+        <li><strong>Pattern discovery:</strong> finds natural groupings, anomalies, or structure in the data.</li>
+        <li><strong>Exploratory:</strong> often used as a first step before applying more complex models.</li>
+      </ul>
+    </div>
+
+    <!-- 02 Clustering -->
+    <p class="section-label">02 &mdash; What is Clustering?</p>
+    <div class="content-block">
+      <p>Clustering is one of the main tasks in unsupervised learning. It consists of <strong>grouping data points based on similarity</strong>, so that elements within the same group share more characteristics with each other than with those in other groups.</p>
+      <p>The algorithm does not know what the groups represent — it only knows that some points are more similar to each other. The interpretation of what each cluster means is left to the analyst.</p>
+      <ul>
+        <li><strong>Intra-cluster similarity:</strong> points within the same cluster should be close to each other.</li>
+        <li><strong>Inter-cluster separation:</strong> points in different clusters should be far apart.</li>
+        <li><strong>No ground truth:</strong> cluster quality is measured by compactness, not by a correct label.</li>
+      </ul>
+    </div>
+
+    <!-- 03 K-Means -->
+    <p class="section-label">03 &mdash; What is K-Means?</p>
+    <div class="content-block">
+      <p><strong>K-Means</strong> is the most widely used clustering algorithm. It partitions a dataset into <strong>K groups</strong> by assigning each data point to the nearest cluster center, then updating those centers based on the new assignments. This process repeats until the solution stabilizes.</p>
+      <p>The value of K — the number of clusters — must be defined before running the algorithm. Choosing K correctly is one of the most important decisions in the process.</p>
+    </div>
+
+    <!-- 04 Centroids -->
+    <p class="section-label">04 &mdash; Centroids</p>
+    <div class="content-block">
+      <p>A <strong>centroid</strong> is the central point of a cluster — the geometric average of all data points assigned to that cluster. It represents the "center of gravity" of the group.</p>
+      <p>Centroids are recalculated after each assignment step. If a cluster contains points at coordinates (x₁,y₁), (x₂,y₂) … (xₙ,yₙ), its new centroid is:</p>
+    </div>
+    <div class="formula-block">
+      <p class="formula">μ = ( Σxᵢ / n ,  Σyᵢ / n )</p>
+      <div class="formula-legend">
+        <span class="formula-item"><span>μ</span> — new centroid</span>
+        <span class="formula-item"><span>xᵢ, yᵢ</span> — coordinates of each point</span>
+        <span class="formula-item"><span>n</span> — number of points in the cluster</span>
+      </div>
+    </div>
+
+    <!-- 05 Euclidean distance -->
+    <p class="section-label">05 &mdash; Distance Metrics — Euclidean Distance</p>
+    <div class="content-block">
+      <p>To assign each point to the nearest cluster, K-Means needs to measure distance. The most common metric is <strong>Euclidean distance</strong> — the straight-line distance between two points in space, derived from the Pythagorean theorem.</p>
+    </div>
+    <div class="formula-block">
+      <p class="formula">d = √( (x₂−x₁)² + (y₂−y₁)² )</p>
+      <div class="formula-legend">
+        <span class="formula-item"><span>d</span> — distance between two points</span>
+        <span class="formula-item"><span>(x₁,y₁)</span> — data point coordinates</span>
+        <span class="formula-item"><span>(x₂,y₂)</span> — centroid coordinates</span>
+      </div>
+    </div>
+    <div class="content-block">
+      <p>Each data point is assigned to the cluster whose centroid produces the <strong>smallest Euclidean distance</strong>. The process is applied to every point in every iteration.</p>
+    </div>
+
+    <!-- 06 Iterative process -->
+    <p class="section-label">06 &mdash; Iterative Process</p>
+    <div class="content-block">
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <div class="step-body">
+            <span class="step-title">Initialize centroids</span>
+            <span class="step-desc">Choose K initial centroids — randomly or manually selected from the dataset.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <div class="step-body">
+            <span class="step-title">Calculate distances</span>
+            <span class="step-desc">Compute the Euclidean distance from each data point to every centroid.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <div class="step-body">
+            <span class="step-title">Assign clusters</span>
+            <span class="step-desc">Assign each point to the cluster with the nearest centroid.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">04</span>
+          <div class="step-body">
+            <span class="step-title">Update centroids</span>
+            <span class="step-desc">Recalculate each centroid as the mean of all points assigned to that cluster.</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">05</span>
+          <div class="step-body">
+            <span class="step-title">Repeat until convergence</span>
+            <span class="step-desc">Go back to step 2. Stop when centroids no longer move significantly or assignments stop changing.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 Variance and convergence -->
+    <p class="section-label">07 &mdash; Variance and Convergence</p>
+    <div class="content-block">
+      <p class="block-title">SSE — Sum of Squared Errors</p>
+      <p>The quality of clustering is measured by the <strong>SSE (inertia)</strong> — the sum of squared distances between each data point and its assigned centroid. A lower SSE means more compact, better-defined clusters.</p>
+    </div>
+    <div class="formula-block">
+      <p class="formula">SSE = Σₖ Σᵢ∈Cₖ ‖xᵢ − μₖ‖²</p>
+      <div class="formula-legend">
+        <span class="formula-item"><span>K</span> — number of clusters</span>
+        <span class="formula-item"><span>xᵢ</span> — data point</span>
+        <span class="formula-item"><span>μₖ</span> — centroid of cluster k</span>
+        <span class="formula-item"><span>‖·‖²</span> — squared distance</span>
+      </div>
+    </div>
+    <div class="content-block">
+      <p><strong>Convergence</strong> is reached when the centroids stop moving between iterations — meaning the SSE has stabilized and further iterations would not improve the clustering. At this point the algorithm terminates.</p>
+      <ul>
+        <li>SSE always decreases or stays the same between iterations.</li>
+        <li>A smooth, flattening SSE curve signals that the model is near convergence.</li>
+        <li>Comparing SSE across iterations shows how much the clustering improved at each step.</li>
+      </ul>
+    </div>
+
+    <!-- 08 Real-world applications -->
+    <p class="section-label">08 &mdash; Real-World Applications</p>
+    <div class="apps-grid">
+      <div class="app-item">
+        <p class="app-key">Customer segmentation</p>
+        <p class="app-val">Group customers by purchase behavior, age, or income to personalize marketing.</p>
+      </div>
+      <div class="app-item">
+        <p class="app-key">Document clustering</p>
+        <p class="app-val">Organize news articles or research papers into topics without predefined categories.</p>
+      </div>
+      <div class="app-item">
+        <p class="app-key">Anomaly detection</p>
+        <p class="app-val">Identify data points that do not belong to any cluster — potential fraud or system failures.</p>
+      </div>
+      <div class="app-item">
+        <p class="app-key">Image compression</p>
+        <p class="app-val">Reduce image colors by grouping similar pixel values into K representative colors.</p>
+      </div>
+      <div class="app-item">
+        <p class="app-key">Genomics</p>
+        <p class="app-val">Cluster gene expression patterns to identify groups of genes with similar behavior.</p>
+      </div>
+      <div class="app-item">
+        <p class="app-key">Geographic analysis</p>
+        <p class="app-val">Group locations by proximity to optimize delivery routes or identify service zones.</p>
+      </div>
+    </div>
+
+  </main>
+  <footer>
+    <p class="footer-label">Group Members</p>
+    <div class="members">
+      <span class="member">Elkin Yamith Almonacid López</span>
+      <span class="member">Brayan David Cuitiva Umbarila</span>
+      <span class="member">Brayan Yair Mendez Rodriguez</span>
+    </div>
+    <p class="university">Universidad de Cundinamarca</p>
+  </footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
